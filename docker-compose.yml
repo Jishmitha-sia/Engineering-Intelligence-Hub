@@ -1,0 +1,152 @@
+version: '3.8'
+
+# Engineering Intelligence Hub - Development Environment
+
+services:
+  # PostgreSQL Database with pgvector
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: engineering-hub-postgres
+    environment:
+      POSTGRES_DB: engineering_hub
+      POSTGRES_USER: engineering_hub
+      POSTGRES_PASSWORD: engineering_hub
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-extensions.sql:/docker-entrypoint-initdb.d/init-extensions.sql
+    networks:
+      - engineering-hub-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U engineering_hub -d engineering_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Ollama LLM Server
+  ollama:
+    image: ollama/ollama:latest
+    container_name: engineering-hub-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - engineering-hub-network
+    restart: unless-stopped
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: engineering-hub-backend
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://engineering_hub:engineering_hub@postgres:5432/engineering_hub
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - ENVIRONMENT=development
+      - JWT_SECRET_KEY=development-secret-key-change-in-production-32chars
+    volumes:
+      - ./backend:/app
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+      - backend_tmp:/app/tmp
+    networks:
+      - engineering-hub-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: engineering-hub-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - engineering-hub-network
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
+    command: npm run dev
+
+  # Prometheus (Monitoring) - Will be added in Phase 8
+  # prometheus:
+  #   image: prom/prometheus:v2.47.0
+  #   container_name: engineering-hub-prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - prometheus_data:/prometheus
+  #   networks:
+  #     - engineering-hub-network
+  #   restart: unless-stopped
+
+  # Grafana (Dashboards) - Will be added in Phase 8
+  # grafana:
+  #   image: grafana/grafana:10.1.0
+  #   container_name: engineering-hub-grafana
+  #   ports:
+  #     - "3001:3000"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #     - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+  #   networks:
+  #     - engineering-hub-network
+  #   depends_on:
+  #     - prometheus
+  #   restart: unless-stopped
+
+networks:
+  engineering-hub-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  ollama_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_logs:
+    driver: local
+  backend_tmp:
+    driver: local
+  # prometheus_data:
+  #   driver: local
+  # grafana_data:
+  #   driver: local

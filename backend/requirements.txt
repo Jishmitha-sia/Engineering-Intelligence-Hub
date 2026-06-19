@@ -1,0 +1,10 @@
+# Engineering Intelligence Hub - Backend Dependencies
+#
+# Phase 1 (Docker / auth): requirements-base.txt
+# Phase 3+ (ML/RAG):       requirements-ml.txt
+#
+# Install everything locally:
+#   pip install -r requirements-base.txt -r requirements-ml.txt
+
+-r requirements-base.txt
+-r requirements-ml.txt
