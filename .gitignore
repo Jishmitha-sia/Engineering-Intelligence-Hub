@@ -93,3 +93,6 @@ sentence_transformers/
 
 # Kiro workspace (metadata only; specs live in docs/specs/)
 .kiro/
+
+# Local testing docs (not for GitHub)
+docs/TESTING.md

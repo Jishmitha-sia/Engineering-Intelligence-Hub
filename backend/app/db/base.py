@@ -49,7 +49,7 @@ def import_all_models():
     This function should be called before running Alembic migrations
     to ensure all models are properly detected.
     """
-    from models import user  # noqa: F401
+    from models import user, workspace  # noqa: F401
 
 
 # Table prefixes for organization (optional)

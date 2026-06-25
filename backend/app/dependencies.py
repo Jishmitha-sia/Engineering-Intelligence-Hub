@@ -9,6 +9,9 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 
+from models.user import User
+from models.workspace import WorkspaceMember
+
 
 # Security scheme for JWT tokens
 security = HTTPBearer()
@@ -103,78 +106,38 @@ def get_optional_current_user(
 def require_workspace_access(workspace_id: int):
     """
     Dependency factory for workspace access control.
-    
-    Args:
-        workspace_id: ID of workspace to check access for
-        
-    Returns:
-        Dependency function that checks workspace access
     """
     async def _check_access(
-        # current_user: User = Depends(get_current_active_user),  # Uncomment after Task 1.3
-        # db: AsyncSession = Depends(get_db)  # Uncomment after Task 1.2
-    ):
-        """
-        Check if current user has access to workspace.
-        
-        Args:
-            current_user: Current authenticated user
-            db: Database session
-            
-        Raises:
-            HTTPException: If user doesn't have access to workspace
-        """
-        # TODO: Implement in Phase 2 after workspace models
-        # workspace_service = WorkspaceService()
-        # has_access = await workspace_service.user_has_access(
-        #     db, workspace_id, current_user.id
-        # )
-        # if not has_access:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_403_FORBIDDEN,
-        #         detail="Insufficient permissions for this workspace"
-        #     )
-        pass
-    
+        current_user: User = Depends(get_current_active_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> WorkspaceMember:
+        from services.workspace_service import WorkspaceService
+
+        service = WorkspaceService()
+        return await service.require_membership(db, workspace_id, current_user.id)
+
     return _check_access
 
 
 def require_workspace_owner(workspace_id: int):
     """
     Dependency factory for workspace owner access control.
-    
-    Args:
-        workspace_id: ID of workspace to check ownership for
-        
-    Returns:
-        Dependency function that checks workspace ownership
     """
     async def _check_owner(
-        # current_user: User = Depends(get_current_active_user),  # Uncomment after Task 1.3
-        # db: AsyncSession = Depends(get_db)  # Uncomment after Task 1.2
-    ):
-        """
-        Check if current user is owner of workspace.
-        
-        Args:
-            current_user: Current authenticated user
-            db: Database session
-            
-        Raises:
-            HTTPException: If user is not workspace owner
-        """
-        # TODO: Implement in Phase 2 after workspace models
-        # workspace_service = WorkspaceService()
-        # is_owner = await workspace_service.user_is_owner(
-        #     db, workspace_id, current_user.id
-        # )
-        # if not is_owner:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_403_FORBIDDEN,
-        #         detail="Owner permissions required for this operation"
-        #     )
-        pass
-    
+        current_user: User = Depends(get_current_active_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> WorkspaceMember:
+        from models.workspace import WorkspaceRole
+        from services.workspace_service import WorkspaceService
+
+        service = WorkspaceService()
+        return await service.require_membership(
+            db,
+            workspace_id,
+            current_user.id,
+            required_role=WorkspaceRole.OWNER,
+        )
+
     return _check_owner
 
 

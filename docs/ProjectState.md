@@ -4,9 +4,9 @@
 
 **Project Repository**: https://github.com/Jishmitha-sia/Engineering-Intelligence-Hub.git
 
-**Last Updated**: 19 June 2026 (Docker verified working)
+**Last Updated**: 25 June 2026 (Phase 2 complete + bug fixes)
 
-**Current Phase**: Phase 1 - Foundation (~98% complete)
+**Current Phase**: Phase 2 - Complete & Tested
 
 **Documentation**: All `.md` files live in [`docs/`](../docs/). Start with [`docs/README.md`](../docs/README.md).
 
@@ -22,7 +22,7 @@ Engineering Intelligence Hub is an AI-powered engineering knowledge platform tha
 
 ---
 
-## Repository Structure (19-06-2026)
+## Repository Structure (22-06-2026)
 
 ```
 Engineering-Intelligence-Hub/
@@ -35,7 +35,8 @@ Engineering-Intelligence-Hub/
 ├── docker/                   # Postgres init scripts
 ├── docs/                     # All documentation
 │   ├── ProjectState.md       # This file
-│   ├── setup.md              # Manual test & commit guide
+│   ├── setup.md              # Setup & manual testing
+│   ├── TESTING.md            # Comprehensive testing guide
 │   ├── CHANGELOG.md
 │   ├── ArchitectureDecisionRecords.md
 │   └── specs/
@@ -57,7 +58,7 @@ Engineering-Intelligence-Hub/
 - [x] Task breakdown (`docs/specs/tasks.md`)
 - [x] Architecture Decision Records (`docs/ArchitectureDecisionRecords.md`)
 
-### Phase 1: Foundation — In Progress (19-06-2026)
+### Phase 1: Foundation — Complete (19-06-2026)
 
 #### Backend (Tasks 1.1–1.3)
 
@@ -90,13 +91,76 @@ Engineering-Intelligence-Hub/
 
 ---
 
+### Phase 2: Workspace Management — Complete (22-06-2026)
+
+#### Backend (Tasks 2.1–2.2)
+
+- [x] `Workspace` and `WorkspaceMember` models with Owner/Member roles
+- [x] Alembic migration `002_create_workspaces.py`
+- [x] Workspace service with access control
+- [x] Workspace API: CRUD, member invite/remove
+- [x] Workspace access dependencies in `dependencies.py`
+- [x] `WorkspaceInvitation` model with status tracking
+- [x] Invitation API: send, accept, decline, cancel, list
+- [x] Alembic migration `003_workspace_invitations_oauth.py`
+
+#### Frontend (Task 2.3)
+
+- [x] `WorkspaceContext` with workspace switching (localStorage)
+- [x] Dashboard shell with nav and workspace switcher
+- [x] `/workspaces` page: list, create, edit, delete
+- [x] Member manager: invite by email, remove members (owner only)
+- [x] Role-based UI (owner vs member actions)
+- [x] `DeleteWorkspaceDialog` with confirmation modal
+- [x] `PendingInvitations` component with accept/decline buttons
+
+#### OAuth Integration (Phase 2 Extension)
+
+- [x] Google OAuth 2.0 login flow
+- [x] GitHub OAuth login flow
+- [x] OAuth service with state validation
+- [x] User model OAuth fields (`oauth_provider`, `oauth_subject`)
+- [x] OAuth endpoints and callbacks
+- [x] Frontend OAuth buttons with provider detection
+- [x] OAuth callback page for token handling
+- [x] Account linking (email-based user merge)
+
+---
+
 ## Pending — Phase 1 wrap-up
 
 - [x] Docker stack running (postgres, backend, frontend)
 - [x] Alembic migration applied (`001_create_users`)
 - [x] API smoke test: register + login working
-- [ ] **Your manual UI test** — register/login in browser at http://localhost:3000
-- [ ] First commit and push to GitHub
+- [x] Manual UI test — register/login in browser
+- [x] First commit and push to GitHub
+
+### Recent Updates (25-06-2026)
+
+**Phase 2 Complete + Bug Fixes**:
+1. ✅ **Workspace Management** — Full CRUD with role-based access
+2. ✅ **Workspace Invitations** — Send, accept, decline, cancel workflow
+3. ✅ **OAuth Integration** — Google and GitHub social login working
+4. ✅ **Delete Confirmation** — Modal with workspace name typing requirement (GitHub-style)
+5. ✅ **Bug Fix** — Screen glitching (infinite re-render loop) **RESOLVED**
+   - **Root cause**: Three components had infinite loops from function dependencies in React hooks
+   - **Fixed files**: 
+     - `WorkspaceContext.tsx` - Removed circular dependency in acceptInvitation
+     - `WorkspaceList.tsx` - Removed redundant refreshWorkspaces calls
+     - `MemberManager.tsx` - Fixed useEffect dependencies and removed refresh call (main culprit)
+   - **Solution**: Never use callback functions in dependency arrays, only primitive values
+6. ✅ **Automated Tests** — Backend unit tests passing (4/4)
+
+**Testing**:
+- Automated backend tests: ✅ 4/4 unit tests passing
+- Screen glitching bug: ✅ **FULLY FIXED** after finding all three sources
+- Integration tests: Deferred to Phase 9
+
+**Documentation**:
+- Consolidated into docs/ folder
+- Removed unnecessary PHASE2_SUMMARY.md
+- Moved OAuth setup to docs/oauth-setup.md
+- All information in ProjectState.md and CHANGELOG.md
 
 ### Issues fixed (19-06-2026)
 
@@ -107,13 +171,28 @@ Engineering-Intelligence-Hub/
 
 ---
 
-## Next Up — Phase 2: Workspace Management
+## Next Up — Phase 3: Document Ingestion
 
-- [ ] Workspace and WorkspaceMember models
-- [ ] CRUD API with Owner/Member roles
-- [ ] Workspace management UI
+**Ready to Start**: After Phase 2 testing complete
+
+**What's Coming**:
+- [ ] Document model and file storage
+- [ ] Upload API (PDF, DOCX, TXT, Markdown)
+- [ ] Text extraction pipeline
+- [ ] Chunking algorithm (512 tokens, 50 overlap)
+- [ ] Embedding generation (BAAI/bge-small-en-v1.5)
+- [ ] Background processing
+- [ ] Document list UI per workspace
 
 See [`docs/specs/tasks.md`](./specs/tasks.md) for full task list.
+
+---
+
+## Completed — Phase 2 (reference)
+
+- [x] Workspace and WorkspaceMember models
+- [x] CRUD API with Owner/Member roles
+- [x] Workspace management UI
 
 ---
 
@@ -129,6 +208,21 @@ See [`docs/specs/tasks.md`](./specs/tasks.md) for full task list.
 | LLM | Ollama (qwen3:8b, llama3.1:8b) | Docker ready |
 | Testing | Pytest unit tests | Partial |
 | Deployment | Docker Compose | Configured |
+
+---
+
+## How to Test
+
+See [`docs/TESTING.md`](./TESTING.md) for comprehensive testing guide.
+
+**Quick Test**:
+```powershell
+# Automated tests
+docker compose exec backend pytest tests/unit -v
+
+# Manual tests
+Start-Process http://localhost:3000/workspaces
+```
 
 ---
 

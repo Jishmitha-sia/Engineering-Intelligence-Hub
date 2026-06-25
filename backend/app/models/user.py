@@ -8,9 +8,12 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 
 from db.base import Base, TimestampMixin, ActiveMixin
+
+if TYPE_CHECKING:
+    from models.workspace import WorkspaceMember
 
 
 class User(Base, TimestampMixin, ActiveMixin):
@@ -70,11 +73,22 @@ class User(Base, TimestampMixin, ActiveMixin):
         nullable=True,
         doc="Last login timestamp"
     )
-    
-    # Relationships (will be added in Phase 2)
-    # workspaces: Mapped[List["WorkspaceMember"]] = relationship(
-    #     "WorkspaceMember", back_populates="user"
-    # )
+
+    oauth_provider: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True,
+        doc="OAuth provider name (google, github)",
+    )
+    oauth_subject: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+        doc="Unique user id from OAuth provider",
+    )
+
+    # Relationships
+    workspace_memberships: Mapped[List["WorkspaceMember"]] = relationship(
+        "WorkspaceMember", back_populates="user"
+    )
     
     def __repr__(self) -> str:
         """String representation of User."""

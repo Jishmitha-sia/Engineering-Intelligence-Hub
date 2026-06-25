@@ -7,14 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added (19-06-2026)
+### Fixed (22-06-2026)
+- **Infinite re-render loop (FULLY RESOLVED)**: Screen glitching/blinking on workspaces page
+  - **Root cause**: Three components had infinite loops from callback function dependencies
+  - **Issue 1** - WorkspaceContext.tsx: Circular dependency where acceptInvitation depended on refreshWorkspaces
+  - **Issue 2** - WorkspaceList.tsx: Redundant refreshWorkspaces() calls after CRUD operations
+  - **Issue 3** - MemberManager.tsx: useEffect depended on getWorkspaceDetail callback + unnecessary refreshWorkspaces call (main culprit)
+  - **Solution**: 
+    - Inlined workspace refresh logic in acceptInvitation to break circular dependency
+    - Removed all redundant refreshWorkspaces() calls since CRUD operations already update state
+    - Fixed useEffect to only depend on workspace.id (primitive) not callback functions
+  - **Pattern learned**: Never use callback functions in React dependency arrays - only primitive values (strings, numbers, booleans)
+  - Hard refresh browser required after fix: `Ctrl+Shift+R` (Windows)
+
+### Added (22-06-2026)
+- **Documentation cleanup**:
+  - Deleted PHASE2_SUMMARY.md (unnecessary)
+  - Moved OAuth setup to docs/oauth-setup.md
+  - All project info consolidated in ProjectState.md and CHANGELOG.md
+  - Created docs/TESTING.md - Single comprehensive testing guide
+  
+- **Phase 2 Complete**:
+  - Workspace invitations system (send, accept, decline, cancel)
+  - Google OAuth 2.0 (tested and working)
+  - GitHub OAuth (tested and working)  
+  - Delete confirmation modal with workspace name typing requirement (GitHub-style)
+  - Member management with role-based access
+  
+- **Automated Testing**:
+  - Backend unit tests: 4 passing (authentication & security)
+  - Test command: `docker compose exec backend pytest tests/unit -v`
+
+### Previously Added (19-06-2026)
+- **OAuth Integration**: Complete Google and GitHub social login implementation
+  - OAuth service with state validation and token exchange
+  - User model OAuth fields (oauth_provider, oauth_subject)
+  - OAuth API endpoints: /auth/google/login, /auth/github/login, /auth/oauth/providers
+  - Frontend OAuth buttons with automatic provider detection
+  - OAuth callback page for seamless login flow
+  - Account linking for existing users with same email
+- **Workspace Invitations**: Full invitation system with status tracking
+  - WorkspaceInvitation model with pending/accepted/declined/cancelled states
+  - Invitation API: send, accept, decline, cancel, list
+  - Backend invitation service with email validation
+  - Frontend PendingInvitations component
+  - Migration 003 for invitations and OAuth fields
+- **Documentation**: 
+  - New oauth-setup.md with comprehensive OAuth configuration guide
+  - Updated .env.example with OAuth setup instructions
+  - Updated ProjectState.md and CHANGELOG.md
+
+### Previously Added (19-06-2026)
+- **Phase 2 Workspaces**: Workspace/WorkspaceMember models, migration `002`, CRUD API, member invite/remove, workspace UI with switcher
 - **Phase 1 Backend**: FastAPI app, JWT auth, user model, Alembic migration, security unit tests
 - **Phase 1 Frontend**: Next.js 14 login/register, AuthContext, protected dashboard
 - **Infrastructure**: Docker Compose (postgres, backend, frontend), `.gitignore`, `.env.example`
 - **Documentation**: Reorganized all `.md` files into `docs/` folder; added `docs/setup.md` manual testing guide
 
+### Fixed (19-06-2026)
+- Registration error display for validation failures and duplicate email
+- CORS explicit origins for development with credentials
+- `.gitignore` no longer excludes `backend/app/models/`
+
 ### Planned
-- Phase 2: Workspace Management
 - Phase 3: Document Ingestion Pipeline
 - Phase 4: RAG Chat Implementation
 - Phase 5: GitHub Integration
@@ -254,4 +309,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Project Repository**: https://github.com/Jishmitha-sia/Engineering-Intelligence-Hub.git  
 **Maintainer**: AI Development Team  
-**Last Updated**: 19 June 2026
+**Last Updated**: 25 June 2026

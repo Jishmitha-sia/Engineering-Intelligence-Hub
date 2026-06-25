@@ -1,6 +1,6 @@
 # Setup & Manual Testing Guide
 
-**Last updated**: 19 June 2026
+**Last updated**: 22 June 2026
 
 Step-by-step instructions to run the project locally, test Phase 1 (authentication), and verify everything before committing and pushing to GitHub.
 
@@ -45,6 +45,11 @@ Edit `.env` if needed. Minimum for local dev:
 - `JWT_SECRET_KEY` — at least 32 characters
 - `DATABASE_URL` — default works with Docker Compose postgres service
 
+**Optional - OAuth Social Login** (Phase 2 feature):
+- To enable Google/GitHub login, add OAuth credentials to `.env`
+- See [oauth-quick-start.md](./oauth-quick-start.md) for 5-minute setup
+- Skip this if you only need email/password login
+
 ### Step 3: Build and start services
 
 ```powershell
@@ -69,7 +74,9 @@ Expected output includes `Running upgrade  -> 001`.
 
 ---
 
-## Part 2 — Manual testing (Phase 1)
+## Part 2 — Manual testing (Phases 1 & 2)
+
+### Authentication Tests (Phase 1)
 
 ### Test 1: Backend health check
 
@@ -157,6 +164,29 @@ pytest tests/unit -v --no-cov
 ```
 
 **Pass criteria**: 4 tests passed.
+
+### Workspace & OAuth Tests (Phase 2)
+
+**Test 11: Create Workspace**
+
+1. Go to http://localhost:3000/workspaces
+2. Click **Create workspace**
+3. Enter name and description
+4. Click **Create**
+
+**Pass criteria**: Workspace appears in list.
+
+**Test 12: OAuth Provider Detection**
+
+```powershell
+curl http://localhost:8000/api/v1/auth/oauth/providers
+```
+
+**Pass criteria**: Returns `{"google":false,"github":false}` (or `true` if configured)
+
+**For full Phase 2 testing** (workspaces, invitations, OAuth):
+- See [phase2-testing.md](./phase2-testing.md) for comprehensive test suite
+- See [oauth-quick-start.md](./oauth-quick-start.md) to enable OAuth (optional)
 
 ---
 
@@ -282,4 +312,9 @@ npm run dev
 
 ## Next development step
 
-After Phase 1 is verified and pushed, continue with **Phase 2: Workspace Management** — see [specs/tasks.md](./specs/tasks.md) and [ProjectState.md](./ProjectState.md).
+After Phase 1 & 2 are verified and pushed:
+- ✅ Phase 1 complete: Authentication
+- ✅ Phase 2 complete: Workspaces, Invitations, OAuth
+- 🚀 Continue with **Phase 3: Document Ingestion** — see [specs/tasks.md](./specs/tasks.md) and [ProjectState.md](./ProjectState.md)
+
+**Phase 2 Summary**: See [PHASE2_COMPLETE.md](./PHASE2_COMPLETE.md) for full feature list and testing procedures.

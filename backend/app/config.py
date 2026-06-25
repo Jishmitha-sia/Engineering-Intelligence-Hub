@@ -95,6 +95,14 @@ class Settings(BaseSettings):
     GITHUB_TIMEOUT: int = 300
     GITHUB_TEMP_DIR: str = "./tmp/github"
 
+    # OAuth Settings (optional — leave blank to disable provider buttons)
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+    OAUTH_FRONTEND_CALLBACK_URL: str = "http://localhost:3000/auth/callback"
+    OAUTH_BACKEND_BASE_URL: str = "http://localhost:8000"
+
     @field_validator("DATABASE_URL")
     @classmethod
     def validate_database_url(cls, v: str) -> str:

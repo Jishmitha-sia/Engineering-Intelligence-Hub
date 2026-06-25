@@ -5,12 +5,14 @@ Provides user registration, login, and profile management endpoints.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Any
 
 from dependencies import get_db, get_current_active_user
 from services.auth_service import AuthService
+from services.oauth_service import OAuthService
 from schemas.user import (
     UserCreate, 
     UserLogin, 
@@ -309,6 +311,50 @@ async def deactivate_account(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Account deactivation failed"
         )
+
+
+@router.get("/oauth/providers")
+async def oauth_providers() -> Any:
+    """Return which OAuth providers are configured."""
+    service = OAuthService()
+    return {
+        "google": service.is_google_enabled(),
+        "github": service.is_github_enabled(),
+    }
+
+
+@router.get("/google/login")
+async def google_login() -> RedirectResponse:
+    service = OAuthService()
+    return RedirectResponse(service.get_google_login_url())
+
+
+@router.get("/google/callback")
+async def google_callback(
+    code: str,
+    state: str,
+    db: AsyncSession = Depends(get_db),
+) -> RedirectResponse:
+    service = OAuthService()
+    redirect_url = await service.handle_google_callback(db, code, state)
+    return RedirectResponse(redirect_url)
+
+
+@router.get("/github/login")
+async def github_login() -> RedirectResponse:
+    service = OAuthService()
+    return RedirectResponse(service.get_github_login_url())
+
+
+@router.get("/github/callback")
+async def github_callback(
+    code: str,
+    state: str,
+    db: AsyncSession = Depends(get_db),
+) -> RedirectResponse:
+    service = OAuthService()
+    redirect_url = await service.handle_github_callback(db, code, state)
+    return RedirectResponse(redirect_url)
 
 
 # Health check for auth service

@@ -7,6 +7,7 @@ import { apiRequest, getErrorMessage } from "@/lib/api";
 import { AuthResponse } from "@/lib/auth";
 import { getPasswordValidationError } from "@/lib/validation";
 import { useAuth } from "@/contexts/AuthContext";
+import { OAuthButtons } from "@/components/auth/OAuthButtons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -119,6 +120,14 @@ export function RegisterForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <OAuthButtons />
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs uppercase tracking-wide text-slate-500">
+            or email
+          </span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName">Full name</Label>
